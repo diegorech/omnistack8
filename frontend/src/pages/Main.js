@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import io from 'socket.io-client'
 import { Link }from 'react-router-dom'
 import './Main.css'
 
@@ -7,11 +8,13 @@ import api from '../services/api'
 import logo from '../assets/logo.svg'
 import like from '../assets/like.svg'
 import dislike from '../assets/dislike.svg'
+import itsamatch from '../assets/itsamatch.png'
  
 
 export default function Main({ match }) {
     const [ users, setUsers ] = useState([])
-    
+    const [matchDev, setMatchDev] = useState(null)
+    //faz a chamada api
     useEffect(() => {
         async function loadUsers() {
             const response = await api.get('/devs', {
@@ -25,19 +28,36 @@ export default function Main({ match }) {
         loadUsers()
     }, [match.params.id])
 
-    async function handleLike(id) {
-        await api.post(`/devs/${id}/likes`, null, {
-            headers: { user: match.params.id },
+    //se conecta com o websockets
+    useEffect(() => {
+        const socket = io('http://localhost:3333', {
+            query: { user: match.params.id } 
         })
 
-        setUsers(users.filter(user => user._id != id))
+        socket.on('match', dev => {
+            //console.log(dev)
+            setMatchDev(dev)
+        })
+        
+    }, [match.params.id])
+
+    async function handleLike(id) {
+        await api.post(`/devs/${id}/likes`, null, {
+            headers: { 
+                user: match.params.id 
+            },
+        })
+
+        setUsers(users.filter(user => user._id !== id))
     }
     async function handleDislike(id) {
         await api.post(`/devs/${id}/dislikes`, null, {
-            headers: { user: match.params.id },
+            headers: { 
+                user: match.params.id 
+            },
         })
 
-        setUsers(users.filter(user => user._id != id))
+        setUsers(users.filter(user => user._id !== id))
     }
 
     return(
@@ -70,6 +90,20 @@ export default function Main({ match }) {
                     </ul>
                 ) : (
                     <div className="empty">Acabou :(</div>
+                )}
+
+                { matchDev && (
+                    <div className='match-container'>
+                        <img src={itsamatch} alt="It's a match"/>
+                        
+                        <img className='avatar' alt='User avatar' src=              {matchDev.avatar}/>
+                        
+                        <strong>{matchDev.name}</strong>
+                        
+                        <p>{matchDev.bio}</p>
+
+                        <button type='button' onClick={() => setMatchDev(null)} >FECHAR</button>
+                    </div>
                 )}
             </div>
     )

@@ -3,8 +3,8 @@ const Dev = require('../models/Dev')
 module.exports = {
     async store(req, res) {
         //console.log(req.params.devId)//pega o id do URL de quem está logado 
-       // console.log(req.headers.user)//pega o id do header do banco
-
+        // console.log(req.headers.user)//pega o id do header do banco
+        //console.log(req.io, req.connectedUsers)
        
        const { user } = req.headers //quem esta logado/"dá o like"
        const { devId } = req.params //quem "recebe o like"
@@ -18,8 +18,21 @@ module.exports = {
            return res.status(400).json({ error: "Dev not exists" })
         }
         
+
+        //funcionalidade do match em tempo real com websocket
         if (targetDev.likes.includes(loggedDev._id)){
             console.log(`${loggedDev.name} e ${targetDev.name} deram MATCH`)
+
+            const loggedSocket = req.connectedUsers[user]
+            const targetSocket = req.connectedUsers[devId]
+
+            if ( loggedDev ) {
+                req.io.to(loggedSocket).emit('match', targetDev)
+            }
+
+            if ( targetDev ) {
+                req.io.to(targetSocket).emit('match', loggedDev)
+            }
         }
         
         
