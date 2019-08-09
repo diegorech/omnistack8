@@ -16,6 +16,8 @@ module.exports = {
 
         await loggedDev.save()
 
+        console.log(`${loggedDev.name} dislikes ${targetDev.name}`)
+
         return res.json(loggedDev)
     }
 }

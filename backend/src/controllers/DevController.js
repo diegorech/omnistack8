@@ -54,7 +54,7 @@ module.exports = {
             
             //vai retirar as infos da api do github e inserir no model Dev
         })
-        
+        console.log(`Usúario ${dev.name} criado com sucesso`)
         return res.json(dev)
     }
 }
